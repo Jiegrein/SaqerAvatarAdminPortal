@@ -1,7 +1,21 @@
+using SaqerAvatarAdminPortal.Services;
+using SaqerAvatarAdminPortal.Services.Interfaces;
+using SaqerAvatarAdminPortal.Models.Dashboard;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// Add controllers for API endpoints
+builder.Services.AddControllers();
+
+// Configure dashboard settings
+builder.Services.Configure<DashboardSettings>(
+    builder.Configuration.GetSection(DashboardSettings.SectionName));
+
+// Register custom services
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 var app = builder.Build();
 
@@ -21,5 +35,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers(); // Enable API controllers
 
 app.Run();
