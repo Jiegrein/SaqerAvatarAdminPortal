@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats History - Chatbot Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>Chatbot Analytics</h1>
+                </div>
+                
+                <!-- Navigation Menu in Header -->
+                <nav class="header-nav">
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="index.html" class="nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
+                            <a href="chats-history.html" class="nav-link">
+                                <i class="fas fa-history"></i>
+                                <span>Chats History</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <div class="page-title">
+                    <h2><i class="fas fa-history"></i> Chats History</h2>
+                    <p>View and manage all chat conversations</p>
+                </div>
+            </section>
+
+            <!-- Date Filter Section -->
+            <section class="filter-section">
+                <div class="filter-card">
+                    <h3><i class="fas fa-filter"></i> Filter by Date</h3>
+                    <div class="filter-controls">
+                        <div class="date-group">
+                            <label for="selectedDate">Select Date:</label>
+                            <input type="date" id="selectedDate" class="date-input">
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn" onclick="applyDateFilter()">
+                                <i class="fas fa-search"></i> Apply Filter
+                            </button>
+                            <button class="secondary-btn" onclick="setTodayDate()">
+                                <i class="fas fa-calendar-day"></i> Today
+                            </button>
+                            <button class="secondary-btn" onclick="setYesterdayDate()">
+                                <i class="fas fa-calendar-minus"></i> Yesterday
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Summary -->
+            <section class="stats-section">
+                <div class="stats-grid history-stats">
+                    <div class="stat-card total-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Chats Today</h3>
+                            <div class="stat-number" id="totalChatsToday">127</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Successful Chats</h3>
+                            <div class="stat-number" id="successChatsToday">95</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card failed-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Failed Chats</h3>
+                            <div class="stat-number" id="failedChatsToday">32</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card rating-average">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Average Rating</h3>
+                            <div class="stat-number" id="averageRatingToday">4.3</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chats History Table -->
+            <section class="table-section">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-list"></i> Chat Conversations</h3>
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search chats..." onkeyup="searchChats()">
+                            </div>
+                            <select id="categoryFilter" onchange="filterByCategory()" class="category-select">
+                                <option value="">All Categories</option>
+                                <option value="Flight Status">Flight Status</option>
+                                <option value="Flight Booking">Flight Booking</option>
+                                <option value="At the Airport">At the Airport</option>
+                                <option value="Vacation Planner">Vacation Planner</option>
+                                <option value="Baggage">Baggage</option>
+                                <option value="Miles">Miles</option>
+                                <option value="FAQ">FAQ</option>
+                                <option value="Booking">Booking</option>
+                                <option value="Check-in">Check-in</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="chats-table" id="chatsHistoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Chat Topic</th>
+                                    <th>Summary</th>
+                                    <th>Rating</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chatsHistoryTableBody">
+                                <!-- Table rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <div class="pagination-info">
+                            <span id="pageInfo">Page 1 of 5</span>
+                        </div>
+                        <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Chat History Modal -->
+    <div id="chatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-comments"></i> Chat History</h3>
+                <span class="close" onclick="closeChatModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chat-info">
+                    <div class="chat-meta">
+                        <span id="chatDate"></span>
+                        <span id="chatTopic"></span>
+                        <span id="chatRating"></span>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Chat messages will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chats-history.js"></script>
+</body>
+</html>

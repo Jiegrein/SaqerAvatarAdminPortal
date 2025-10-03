@@ -1,0 +1,391 @@
+@page
+@using System.Text.Json
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+    var dailyChatsJson = JsonSerializer.Serialize(Model.DashboardData.DailyChats);
+    var successFailedJson = JsonSerializer.Serialize(Model.DashboardData.SuccessFailedDaily);
+    var ratingsJson = JsonSerializer.Serialize(Model.DashboardData.RatingsDaily);
+    var categoriesJson = JsonSerializer.Serialize(Model.DashboardData.Categories);
+    var chatDataJson = JsonSerializer.Serialize(Model.DashboardData.RecentChats);
+}
+
+
+
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="container">
+        <!-- Date Filter Section -->
+        <section class="filter-section">
+            <div class="filter-card">
+                <h3><i class="fas fa-filter"></i> Filter by Date Range</h3>
+                <div class="filter-controls">
+                    <div class="date-group">
+                        <label asp-for="DateFrom">From:</label>
+                        <input asp-for="DateFrom" type="date" class="date-input" />
+                    </div>
+                    <div class="date-group">
+                        <label asp-for="DateTo">To:</label>
+                        <input asp-for="DateTo" type="date" class="date-input" />
+                    </div>
+                    <button type="button" class="filter-btn" onclick="applyDateFilter()">
+                        <i class="fas fa-search"></i> Apply Filter
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Cards -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card total-chats">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Chats</h3>
+                        <div class="stat-number">@Model.DashboardData.Stats.TotalChats</div>
+                    </div>
+                </div>
+
+                <div class="stat-card success-chats">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Success Chats</h3>
+                        <div class="stat-number">@Model.DashboardData.Stats.SuccessChats</div>
+                    </div>
+                </div>
+
+                <div class="stat-card failed-chats">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Failed Chats</h3>
+                        <div class="stat-number">@Model.DashboardData.Stats.FailedChats</div>
+                    </div>
+                </div>
+
+                <div class="stat-card agent-chats">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Chats with Agent</h3>
+                        <div class="stat-number">@Model.DashboardData.Stats.AgentChats</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="charts-grid">
+                <!-- Pie Chart for Categories -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> Chats by Category</h3>
+                    <div class="chart-container">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bar Chart for 7 Days Total Chats -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> Daily Chat Volume</h3>
+                    <div class="chart-container">
+                        <canvas id="dailyChatsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bar Chart for Success/Failed Chats -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-column"></i> Success vs Failed Chats</h3>
+                    <div class="chart-container">
+                        <canvas id="successFailedChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Line Chart for Ratings -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-line"></i> Daily Ratings Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="ratingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Chats Table -->
+        <section class="table-section">
+            <div class="table-card">
+                <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
+                <div class="table-container">
+                    <table class="chats-table">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Chat Topic</th>
+                                <th>Summary</th>
+                                <th>Rating</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var chat in Model.DashboardData.RecentChats)
+                            {
+                                <tr>
+                                    <!-- Date/Time -->
+                                    <td>@chat.DateTime</td>
+
+                                    <!-- Chat Topic (bold) -->
+                                    <td><strong>@chat.Topic</strong></td>
+
+                                    <!-- Summary -->
+                                    <td>@chat.Summary</td>
+
+                                    <!-- Rating as stars -->
+                                    <td>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= chat.Rating)
+                                            {
+                                                <span class="fa fa-star" style="color: gold;"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fa fa-star" style="color: #ccc;"></span>
+                                            }
+                                        }
+                                    </td>
+
+                                    <!-- Status badge -->
+                                    <td>
+                                        @if (chat.IsFailedChat)
+                                        {
+                                            <span class="status-badge failed">Failed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge success">Success</span>
+                                        }
+                                    </td>
+
+                                    <!-- Action button -->
+                                    <td>
+                                        <button type="button" class="view-btn btn btn-primary"
+                                                data-bs-toggle="modal" data-bs-target="#chatModal"
+                                                onclick="openChatModal('@chat.Id')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<!-- Chat History Modal -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="chatModalLabel">
+                    <i class="fas fa-comments"></i> Chat History
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="chat-info mb-3">
+                    <div class="chat-meta">
+                        <span id="chatDate" class="me-3"></span>
+                        <span id="chatTopic" class="me-3"></span>
+                        <span id="chatRating"></span>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Parse Razor-provided JSON
+        const dailyChats = @Html.Raw(dailyChatsJson);
+        const successFailed = @Html.Raw(successFailedJson);
+        const ratings = @Html.Raw(ratingsJson);
+        const categories = @Html.Raw(categoriesJson);
+
+        // Daily Chats Bar Chart
+        new Chart(document.getElementById("dailyChatsChart"), {
+            type: 'bar',
+            data: {
+                labels: dailyChats.Labels,
+                datasets: [{
+                    label: 'Daily Chats',
+                    data: dailyChats.Data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Success vs Failed Bar Chart
+        new Chart(document.getElementById("successFailedChart"), {
+            type: 'bar',
+            data: {
+                labels: successFailed.Labels,
+                datasets: [
+                    {
+                        label: 'Success',
+                        data: successFailed.Success,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Failed',
+                        data: successFailed.Failed,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Ratings Line Chart
+        new Chart(document.getElementById("ratingsChart"), {
+            type: 'line',
+            data: {
+                labels: ratings.Labels,
+                datasets: [{
+                    label: 'Average Rating',
+                    data: ratings.Data,
+                    borderColor: 'orange',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 5 }
+                }
+            }
+        });
+
+        // Categories Pie Chart
+        new Chart(document.getElementById("categoriesChart"), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(categories),
+                datasets: [{
+                    label: 'Categories',
+                    data: Object.values(categories),
+                    backgroundColor: [
+                        'blue','green','red','orange','purple','cyan','yellow','pink','brown','gray'
+                    ]
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        // Example chat data
+        const chatData = @Html.Raw(chatDataJson);
+
+        // Get the modal element
+        const chatModalElement = document.getElementById('chatModal');
+
+        // Add event listener for when the modal is completely hidden
+        chatModalElement.addEventListener('hidden.bs.modal', function () {
+            document.body.style.overflow = 'auto'; // Ensure body scrolling is restored
+        });
+
+        function openChatModal(chatId) {
+            console.log("chatData:", chatData);
+            console.log("chatId =", chatId);
+
+            let chat = chatData.find(c => c.Id === parseInt(chatId));
+            console.log("Found chat:", chat);
+            if (!chat) return;
+
+            document.getElementById("chatDate").innerText = "Date: " + chat.DateTime;
+            document.getElementById("chatTopic").innerText = "Topic: " + chat.Topic;
+
+            let starsHtml = "";
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fa fa-star" style="color:${i <= chat.Rating ? "gold" : "#ccc"}"></i>`;
+            }
+            document.getElementById("chatRating").innerHTML = starsHtml;
+
+            const chatMessagesContainer = document.getElementById("chatMessages");
+            chatMessagesContainer.innerHTML = "";
+
+            chat.Messages.forEach(msg => {
+                const msgDiv = document.createElement("div");
+                msgDiv.classList.add("chat-message", msg.Type);
+
+                const bubbleDiv = document.createElement("div");
+                bubbleDiv.classList.add("chat-bubble");
+                bubbleDiv.innerText = msg.Content;
+
+                const timestampDiv = document.createElement("div");
+                timestampDiv.classList.add("chat-timestamp");
+                timestampDiv.innerText = msg.Timestamp;
+
+                msgDiv.appendChild(bubbleDiv);
+                msgDiv.appendChild(timestampDiv);
+
+                chatMessagesContainer.appendChild(msgDiv);
+            });
+
+            // Remove any existing backdrops
+            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+            existingBackdrops.forEach(backdrop => backdrop.remove());
+
+            const myModal = new bootstrap.Modal(document.getElementById('chatModal'), { backdrop: false });
+            myModal.show();
+        }
+
+        function closeChatModal() {
+            const modalElement = document.getElementById('chatModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+    </script>
+}

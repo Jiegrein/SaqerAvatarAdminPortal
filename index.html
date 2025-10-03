@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>Chatbot Analytics</h1>
+                </div>
+                
+                <!-- Navigation Menu in Header -->
+                <nav class="header-nav">
+                    <ul class="nav-menu">
+                        <li class="nav-item active">
+                            <a href="index.html" class="nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="chats-history.html" class="nav-link">
+                                <i class="fas fa-history"></i>
+                                <span>Chats History</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Date Filter Section -->
+            <section class="filter-section">
+                <div class="filter-card">
+                    <h3><i class="fas fa-filter"></i> Filter by Date Range</h3>
+                    <div class="filter-controls">
+                        <div class="date-group">
+                            <label for="dateFrom">From:</label>
+                            <input type="date" id="dateFrom" class="date-input">
+                        </div>
+                        <div class="date-group">
+                            <label for="dateTo">To:</label>
+                            <input type="date" id="dateTo" class="date-input">
+                        </div>
+                        <button class="filter-btn" onclick="applyDateFilter()">
+                            <i class="fas fa-search"></i> Apply Filter
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card total-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Chats</h3>
+                            <div class="stat-number" id="totalChats">2,847</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Success Chats</h3>
+                            <div class="stat-number" id="successChats">2,134</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card failed-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Failed Chats</h3>
+                            <div class="stat-number" id="failedChats">713</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card agent-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Chats with Agent</h3>
+                            <div class="stat-number" id="agentChats">456</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="charts-grid">
+                    <!-- Pie Chart for Categories -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie"></i> Chats by Category</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryPieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart for 7 Days Total Chats -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar"></i> Daily Chat Volume</h3>
+                        <div class="chart-container">
+                            <canvas id="dailyChatsBarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart for Success/Failed Chats -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-column"></i> Success vs Failed Chats</h3>
+                        <div class="chart-container">
+                            <canvas id="successFailedBarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Line Chart for Ratings -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-line"></i> Daily Ratings Trend</h3>
+                        <div class="chart-container">
+                            <canvas id="ratingsLineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Chats Table -->
+            <section class="table-section">
+                <div class="table-card">
+                    <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
+                    <div class="table-container">
+                        <table class="chats-table" id="chatsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Chat Topic</th>
+                                    <th>Summary</th>
+                                    <th>Rating</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chatsTableBody">
+                                <!-- Table rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Chat History Modal -->
+    <div id="chatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-comments"></i> Chat History</h3>
+                <span class="close" onclick="closeChatModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chat-info">
+                    <div class="chat-meta">
+                        <span id="chatDate"></span>
+                        <span id="chatTopic"></span>
+                        <span id="chatRating"></span>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Chat messages will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

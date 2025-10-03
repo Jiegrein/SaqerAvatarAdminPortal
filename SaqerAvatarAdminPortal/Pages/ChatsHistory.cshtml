@@ -1,0 +1,212 @@
+﻿@page
+@model ChatsHistoryModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Chats History - Chatbot Admin Dashboard";
+}
+
+
+
+<form method="get">
+    <main class="main-content">
+        <div class="container">
+            <!-- Filter Section -->
+            <section class="filter-section">
+                <div class="filter-card">
+                    <h3><i class="fas fa-filter"></i> Filter by Date</h3>
+                    <div class="filter-controls">
+                        <div class="date-group">
+                            <label for="selectedDate">Select Date:</label>
+                            <input type="date" asp-for="SelectedDate" id="selectedDate" class="date-input" />
+                        </div>
+                        <div class="filter-buttons">
+                            <button type="submit" class="filter-btn">
+                                <i class="fas fa-search"></i> Apply Filter
+                            </button>
+                            <button type="submit" name="setToday" value="true" class="secondary-btn">
+                                <i class="fas fa-calendar-day"></i> Today
+                            </button>
+                            <button type="submit" name="setYesterday" value="true" class="secondary-btn">
+                                <i class="fas fa-calendar-minus"></i> Yesterday
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <div class="stats-grid history-stats">
+                    <div class="stat-card total-chats">
+                        <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                        <div class="stat-content">
+                            <h3>Total Chats</h3>
+                            <div class="stat-number">@Model.TodayStats.TotalChats</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success-chats">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3>Successful Chats</h3>
+                            <div class="stat-number">@Model.TodayStats.SuccessChats</div>
+                        </div>
+                    </div>
+                    <div class="stat-card failed-chats">
+                        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-content">
+                            <h3>Failed Chats</h3>
+                            <div class="stat-number">@Model.TodayStats.FailedChats</div>
+                        </div>
+                    </div>
+                    <div class="stat-card rating-average">
+                        <div class="stat-icon"><i class="fas fa-star"></i></div>
+                        <div class="stat-content">
+                            <h3>Average Rating</h3>
+                            <div class="stat-number">@Model.TodayStats.AverageRating</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table Section -->
+            <div class="chat-history-card">
+                <div class="chat-history-header">
+                    <h3><i class="fas fa-list"></i> Chat Conversations</h3>
+
+                    <div class="chat-history-controls">
+                        <div class="search-box">
+                            <input type="text" placeholder="Search chats..." asp-for="SearchQuery" />
+                            <button type="submit"><i class="fas fa-search"></i></button>
+                        </div>
+
+                        <select asp-for="SelectedCategory" class="category-select">
+                            <option value="">All Categories</option>
+                            @foreach (var cat in Model.Categories)
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="chat-history-table-container">
+                    <table class="chats-table">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Chat Topic</th>
+                                <th>Summary</th>
+                                <th>Rating</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.FilteredChats.Any())
+                            {
+                                @foreach (var chat in Model.FilteredChats)
+                                {
+                                    <tr>
+                                        <td>@chat.DateTime</td>
+                                        <td>@chat.Topic</td>
+                                        <td>@chat.Summary</td>
+                                        <td>@chat.Rating</td>
+                                        <td>@(chat.IsFailedChat ? "Failed" : "Success")</td>
+                                        <td>
+                                            <button class="view-btn" type="button" onclick="openChatModal('@chat.Id')">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding:20px;">
+                                        <div class="no-chats-found">
+                                            <i class="fas fa-calendar-xmark"></i>
+                                            <span>No chats found for the selected date</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button class="pagination-btn" asp-route-page="@Model.Page - 1" disabled="@(Model.Page == 1)">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span>Page @Model.Page of @Model.TotalPages</span>
+                    <button class="pagination-btn" asp-route-page="@Model.Page + 1" disabled="@(Model.Page == Model.TotalPages)">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</form>
+
+
+<style>
+    .chat-history-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0px 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .chat-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .chat-history-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chats-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .chats-table th, .chats-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+    .no-chats-found {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 14px;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        padding: 15px;
+    }
+
+    .pagination-btn {
+        background: #f5f5f5;
+        border: none;
+        padding: 8px 12px;
+        margin: 0 5px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .pagination-btn:disabled {
+            background: #f5f5f5; /* same as enabled */
+            color: #000; /* optional: make text same color */
+            opacity: 1; /* override browser dimming */
+            cursor: not-allowed; /* optional to show disabled state */
+        }
+
+</style>
