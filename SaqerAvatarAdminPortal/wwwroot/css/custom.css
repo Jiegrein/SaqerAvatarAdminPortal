@@ -202,6 +202,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative; /* For absolute positioning of validation messages */
 }
 
 .date-group label {
@@ -245,6 +246,75 @@ body {
     background: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+}
+
+.filter-btn:disabled {
+    background: var(--neutral-300);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.date-group label {
+    font-weight: 500;
+    color: var(--neutral-700);
+    font-size: 14px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(79 70 229 / 0.1);
+}
+
+.filter-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.filter-btn:disabled {
+    background: var(--neutral-300);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.validation-message {
+    font-size: 12px;
+    min-height: 0;
+    margin-top: 4px;
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    background: var(--white);
+    padding: 2px 4px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    white-space: nowrap;
+}
+
+/* Responsive Filter Controls */
+@media (max-width: 768px) {
+    .filter-controls {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .filter-btn {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-card {
+        padding: 16px;
+    }
+    
+    .date-input {
+        min-width: 120px;
+    }
 }
 
 /* Stats Section */
@@ -456,27 +526,22 @@ body {
     transform: translateY(-1px);
 }
 
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1055;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+/* Modal with Blur Effect - Matching Root Project */
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+.modal-backdrop {
+    display: none !important; /* Hide Bootstrap's default backdrop */
 }
 
 .modal-content {
     background-color: var(--white);
-    margin: 5% auto;
     border-radius: var(--border-radius-lg);
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
-    overflow: hidden;
     box-shadow: var(--shadow-xl);
     animation: modalSlideIn 0.3s ease;
+    border: none;
 }
 
 @keyframes modalSlideIn {
@@ -498,28 +563,33 @@ body {
     align-items: center;
 }
 
-.modal-header h3 {
+.modal-header h5 {
     font-size: 20px;
     font-weight: 600;
     color: var(--neutral-800);
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
 }
 
-.modal-header h3 i {
+.modal-header h5 i {
     color: var(--primary-color);
 }
 
-.close {
+.btn-close {
     color: var(--neutral-500);
-    font-size: 28px;
+    font-size: 24px;
     font-weight: bold;
     cursor: pointer;
     transition: color 0.2s ease;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 
-.close:hover {
+.btn-close:hover {
     color: var(--neutral-800);
 }
 
