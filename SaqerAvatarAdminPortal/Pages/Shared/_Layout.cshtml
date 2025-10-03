@@ -11,8 +11,9 @@
     <link rel="stylesheet" href="~/SaqerAvatarAdminPortal.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header class="header">
-    <div class="header-content">
+    <header class="header" id="headerContent">
+        <div class="container">
+            <div class="header-content">
         <div class="logo">
             <i class="fas fa-robot"></i>
             <h1>Chatbot Analytics</h1>
@@ -40,8 +41,9 @@
             <i class="fas fa-user-circle"></i>
             <span>Admin Panel</span>
         </div>
-    </div>
-</header>
+            </div>
+        </div>
+    </header>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
