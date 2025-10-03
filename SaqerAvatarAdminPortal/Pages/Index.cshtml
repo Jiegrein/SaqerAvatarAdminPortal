@@ -1,5 +1,6 @@
 @page
 @using System.Text.Json
+@using SaqerAvatarAdminPortal.Models.Dashboard
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
@@ -7,186 +8,273 @@
     var successFailedJson = JsonSerializer.Serialize(Model.DashboardData.SuccessFailedDaily);
     var ratingsJson = JsonSerializer.Serialize(Model.DashboardData.RatingsDaily);
     var categoriesJson = JsonSerializer.Serialize(Model.DashboardData.Categories);
-    var chatDataJson = JsonSerializer.Serialize(Model.DashboardData.RecentChats);
 }
 
 
 
 
 <!-- Main Content -->
-<main class="main-content">
+<main class="main-content" id="mainContent">
     <div class="container">
+
+        <!-- Dashboard Status -->
+        <section class="status-section mb-3">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Dashboard Status:</strong> @Model.ViewModel.StatusMessage
+                @if (Model.ViewModel.HasData)
+                {
+                    <span class="ms-3">
+                        <small><i class="fas fa-chart-bar"></i> @Model.DashboardData.Stats.TotalChats total chats</small>
+                    </span>
+                }
+            </div>
+        </section>
+
         <!-- Date Filter Section -->
         <section class="filter-section">
             <div class="filter-card">
                 <h3><i class="fas fa-filter"></i> Filter by Date Range</h3>
-                <div class="filter-controls">
-                    <div class="date-group">
-                        <label asp-for="DateFrom">From:</label>
-                        <input asp-for="DateFrom" type="date" class="date-input" />
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <div asp-validation-summary="All"></div>
                     </div>
-                    <div class="date-group">
-                        <label asp-for="DateTo">To:</label>
-                        <input asp-for="DateTo" type="date" class="date-input" />
+                }
+
+                @if (Model.ViewModel.HasErrors)
+                {
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Dashboard Errors</h6>
+                        <ul class="mb-0">
+                            @foreach (var error in Model.ViewModel.ErrorMessages)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
                     </div>
-                    <button type="button" class="filter-btn" onclick="applyDateFilter()">
-                        <i class="fas fa-search"></i> Apply Filter
-                    </button>
-                </div>
+                }
+
+                <form method="post">
+                    <div class="filter-controls">
+                        <div class="date-group">
+                            <label asp-for="Filter.DateFrom">From:</label>
+                            <input asp-for="Filter.DateFrom" type="date" class="date-input" />
+                            <span asp-validation-for="Filter.DateFrom" class="text-danger validation-message"></span>
+                        </div>
+                        <div class="date-group">
+                            <label asp-for="Filter.DateTo">To:</label>
+                            <input asp-for="Filter.DateTo" type="date" class="date-input" />
+                            <span asp-validation-for="Filter.DateTo" class="text-danger validation-message"></span>
+                        </div>
+                        <button type="submit" class="filter-btn" @(Model.ViewModel.IsLoading ? "disabled" : "")>
+                            @if (Model.ViewModel.IsLoading)
+                            {
+                                <i class="fas fa-spinner fa-spin"></i> <span>Loading...</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-search"></i> <span>Apply Filter</span>
+                            }
+                        </button>
+                    </div>
+                </form>
             </div>
         </section>
 
         <!-- Stats Cards -->
         <section class="stats-section">
-            <div class="stats-grid">
-                <div class="stat-card total-chats">
-                    <div class="stat-icon">
-                        <i class="fas fa-comments"></i>
+            @if (Model.ViewModel.IsLoading)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading dashboard data...</span>
                     </div>
-                    <div class="stat-content">
-                        <h3>Total Chats</h3>
-                        <div class="stat-number">@Model.DashboardData.Stats.TotalChats</div>
-                    </div>
+                    <p class="mt-2">Loading dashboard data...</p>
                 </div>
+            }
+            else if (Model.ViewModel.HasErrors)
+            {
+                <div class="alert alert-danger text-center">
+                    <h5><i class="fas fa-exclamation-circle"></i> Unable to Load Dashboard</h5>
+                    <p>There was an error loading the dashboard data. Please try refreshing the page or contact support if the problem persists.</p>
+                    <button class="btn btn-outline-danger" onclick="location.reload()">
+                        <i class="fas fa-refresh"></i> Retry
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="stats-grid">
+                    <div class="stat-card total-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Chats</h3>
+                            <div class="stat-number">@Model.DashboardData.Stats.TotalChats</div>
+                        </div>
+                    </div>
 
-                <div class="stat-card success-chats">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
+                    <div class="stat-card success-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Success Chats</h3>
+                            <div class="stat-number">@Model.DashboardData.Stats.SuccessChats</div>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3>Success Chats</h3>
-                        <div class="stat-number">@Model.DashboardData.Stats.SuccessChats</div>
-                    </div>
-                </div>
 
-                <div class="stat-card failed-chats">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <div class="stat-card failed-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Failed Chats</h3>
+                            <div class="stat-number">@Model.DashboardData.Stats.FailedChats</div>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3>Failed Chats</h3>
-                        <div class="stat-number">@Model.DashboardData.Stats.FailedChats</div>
-                    </div>
-                </div>
 
-                <div class="stat-card agent-chats">
-                    <div class="stat-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Chats with Agent</h3>
-                        <div class="stat-number">@Model.DashboardData.Stats.AgentChats</div>
+                    <div class="stat-card agent-chats">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Chats with Agent</h3>
+                            <div class="stat-number">@Model.DashboardData.Stats.AgentChats</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </section>
 
         <!-- Charts Section -->
         <section class="charts-section">
-            <div class="charts-grid">
-                <!-- Pie Chart for Categories -->
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-pie"></i> Chats by Category</h3>
-                    <div class="chart-container">
-                        <canvas id="categoriesChart"></canvas>
+            @if (!Model.ViewModel.IsLoading && !Model.ViewModel.HasErrors)
+            {
+                <div class="charts-grid">
+                    <!-- Pie Chart for Categories -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie"></i> Chats by Category</h3>
+                        <div class="chart-container">
+                            <canvas id="categoriesChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Bar Chart for 7 Days Total Chats -->
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-bar"></i> Daily Chat Volume</h3>
-                    <div class="chart-container">
-                        <canvas id="dailyChatsChart"></canvas>
+                    <!-- Bar Chart for 7 Days Total Chats -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar"></i> Daily Chat Volume</h3>
+                        <div class="chart-container">
+                            <canvas id="dailyChatsChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Bar Chart for Success/Failed Chats -->
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-column"></i> Success vs Failed Chats</h3>
-                    <div class="chart-container">
-                        <canvas id="successFailedChart"></canvas>
+                    <!-- Bar Chart for Success/Failed Chats -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-column"></i> Success vs Failed Chats</h3>
+                        <div class="chart-container">
+                            <canvas id="successFailedChart"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Line Chart for Ratings -->
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-line"></i> Daily Ratings Trend</h3>
-                    <div class="chart-container">
-                        <canvas id="ratingsChart"></canvas>
+                    <!-- Line Chart for Ratings -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-line"></i> Daily Ratings Trend</h3>
+                        <div class="chart-container">
+                            <canvas id="ratingsChart"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </section>
 
         <!-- Recent Chats Table -->
         <section class="table-section">
             <div class="table-card">
                 <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
-                <div class="table-container">
-                    <table class="chats-table">
-                        <thead>
-                            <tr>
-                                <th>Date/Time</th>
-                                <th>Chat Topic</th>
-                                <th>Summary</th>
-                                <th>Rating</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var chat in Model.DashboardData.RecentChats)
-                            {
-                                <tr>
-                                    <!-- Date/Time -->
-                                    <td>@chat.DateTime</td>
 
-                                    <!-- Chat Topic (bold) -->
-                                    <td><strong>@chat.Topic</strong></td>
+                @if (!Model.ViewModel.IsLoading && !Model.ViewModel.HasErrors)
+                {
+                    @if (Model.DashboardData.RecentChats.Any())
+                    {
+                        <div class="table-container">
+                            <table class="chats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date/Time</th>
+                                        <th>Chat Topic</th>
+                                        <th>Summary</th>
+                                        <th>Rating</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var chat in Model.DashboardData.RecentChats)
+                                    {
+                                        <tr>
+                                            <!-- Date/Time -->
+                                            <td>@chat.DateTime</td>
 
-                                    <!-- Summary -->
-                                    <td>@chat.Summary</td>
+                                            <!-- Chat Topic (bold) -->
+                                            <td><strong>@chat.Topic</strong></td>
 
-                                    <!-- Rating as stars -->
-                                    <td>
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= chat.Rating)
-                                            {
-                                                <span class="fa fa-star" style="color: gold;"></span>
-                                            }
-                                            else
-                                            {
-                                                <span class="fa fa-star" style="color: #ccc;"></span>
-                                            }
-                                        }
-                                    </td>
+                                            <!-- Summary -->
+                                            <td>@chat.Summary</td>
 
-                                    <!-- Status badge -->
-                                    <td>
-                                        @if (chat.IsFailedChat)
-                                        {
-                                            <span class="status-badge failed">Failed</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="status-badge success">Success</span>
-                                        }
-                                    </td>
+                                            <!-- Rating as stars -->
+                                            <td>
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= chat.Rating)
+                                                    {
+                                                        <span class="fa fa-star" style="color: gold;"></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="fa fa-star" style="color: #ccc;"></span>
+                                                    }
+                                                }
+                                            </td>
 
-                                    <!-- Action button -->
-                                    <td>
-                                        <button type="button" class="view-btn btn btn-primary"
-                                                data-bs-toggle="modal" data-bs-target="#chatModal"
-                                                onclick="openChatModal('@chat.Id')">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                                            <!-- Status badge -->
+                                            <td>
+                                                <span class="status-badge @chat.StatusClass">@chat.Status</span>
+                                            </td>
+
+                                            <!-- Action button -->
+                                            <td>
+                                                <button type="button" class="view-btn btn btn-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#chatModal"
+                                                        onclick="openChatModal('@chat.Id')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center">
+                            <h5><i class="fas fa-info-circle"></i> No Recent Chats</h5>
+                            <p>No chat data available for the selected date range.</p>
+                        </div>
+                    }
+                }
+                else if (Model.ViewModel.IsLoading)
+                {
+                    <div class="text-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading recent chats...</span>
+                        </div>
+                        <p class="mt-2">Loading recent chats...</p>
+                    </div>
+                }
             </div>
         </section>
 
@@ -240,17 +328,46 @@
             data: {
                 labels: dailyChats.Labels,
                 datasets: [{
-                    label: 'Daily Chats',
+                    label: 'Total Chats',
                     data: dailyChats.Data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+                    backgroundColor: '#4f46e5',
+                    borderColor: '#3730a3',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
                 }]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e2e8f0'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    }
                 }
             }
         });
@@ -264,23 +381,63 @@
                     {
                         label: 'Success',
                         data: successFailed.Success,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false
                     },
                     {
                         label: 'Failed',
                         data: successFailed.Failed,
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false
                     }
                 ]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        stacked: false,
+                        grid: {
+                            color: '#e2e8f0'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    }
                 }
             }
         });
@@ -293,16 +450,52 @@
                 datasets: [{
                     label: 'Average Rating',
                     data: ratings.Data,
-                    borderColor: 'orange',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
                     fill: true,
-                    tension: 0.3
+                    tension: 0.4,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
                 }]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, max: 5 }
+                    y: {
+                        beginAtZero: false,
+                        min: 1,
+                        max: 5,
+                        grid: {
+                            color: '#e2e8f0'
+                        },
+                        ticks: {
+                            stepSize: 0.5,
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b'
+                        }
+                    }
                 }
             }
         });
@@ -316,15 +509,40 @@
                     label: 'Categories',
                     data: Object.values(categories),
                     backgroundColor: [
-                        'blue','green','red','orange','purple','cyan','yellow','pink','brown','gray'
-                    ]
+                        '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                        '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6b7280'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             },
-            options: { responsive: true }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
         });
-
-        // Example chat data
-        const chatData = @Html.Raw(chatDataJson);
 
         // Get the modal element
         const chatModalElement = document.getElementById('chatModal');
@@ -332,52 +550,87 @@
         // Add event listener for when the modal is completely hidden
         chatModalElement.addEventListener('hidden.bs.modal', function () {
             document.body.style.overflow = 'auto'; // Ensure body scrolling is restored
+
+            // Clean up any stuck backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                if (backdrop.parentNode) {
+                    backdrop.parentNode.removeChild(backdrop);
+                }
+            });
+
+            // Remove modal-open class from body if it's stuck
+            document.body.classList.remove('modal-open');
+
+            // Reset any inline styles that might be stuck
+            document.body.style.paddingRight = '';
         });
 
         function openChatModal(chatId) {
-            console.log("chatData:", chatData);
-            console.log("chatId =", chatId);
+            console.log("Fetching chat data for ID:", chatId);
 
-            let chat = chatData.find(c => c.Id === parseInt(chatId));
-            console.log("Found chat:", chat);
-            if (!chat) return;
+            // Show loading state
+            const chatMessages = document.getElementById("chatMessages");
+            chatMessages.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
-            document.getElementById("chatDate").innerText = "Date: " + chat.DateTime;
-            document.getElementById("chatTopic").innerText = "Topic: " + chat.Topic;
-
-            let starsHtml = "";
-            for (let i = 1; i <= 5; i++) {
-                starsHtml += `<i class="fa fa-star" style="color:${i <= chat.Rating ? "gold" : "#ccc"}"></i>`;
+            // Get or create modal instance
+            const modalElement = document.getElementById('chatModal');
+            let myModal = bootstrap.Modal.getInstance(modalElement);
+            if (!myModal) {
+                myModal = new bootstrap.Modal(modalElement);
             }
-            document.getElementById("chatRating").innerHTML = starsHtml;
 
-            const chatMessagesContainer = document.getElementById("chatMessages");
-            chatMessagesContainer.innerHTML = "";
-
-            chat.Messages.forEach(msg => {
-                const msgDiv = document.createElement("div");
-                msgDiv.classList.add("chat-message", msg.Type);
-
-                const bubbleDiv = document.createElement("div");
-                bubbleDiv.classList.add("chat-bubble");
-                bubbleDiv.innerText = msg.Content;
-
-                const timestampDiv = document.createElement("div");
-                timestampDiv.classList.add("chat-timestamp");
-                timestampDiv.innerText = msg.Timestamp;
-
-                msgDiv.appendChild(bubbleDiv);
-                msgDiv.appendChild(timestampDiv);
-
-                chatMessagesContainer.appendChild(msgDiv);
-            });
-
-            // Remove any existing backdrops
-            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-            existingBackdrops.forEach(backdrop => backdrop.remove());
-
-            const myModal = new bootstrap.Modal(document.getElementById('chatModal'), { backdrop: false });
+            // Show modal immediately with loading state
             myModal.show();
+
+            // Fetch chat data from API
+            fetch(`/api/dashboard/chat/${chatId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(chat => {
+                    console.log("Received chat data:", chat);
+
+                    // Update modal header
+                    document.getElementById("chatDate").innerText = "Date: " + chat.dateTime;
+                    document.getElementById("chatTopic").innerText = "Topic: " + chat.topic;
+
+                    // Update rating
+                    let starsHtml = "";
+                    for (let i = 1; i <= 5; i++) {
+                        starsHtml += `<i class="fa fa-star" style="color:${i <= chat.rating ? "gold" : "#ccc"}"></i>`;
+                    }
+                    document.getElementById("chatRating").innerHTML = starsHtml;
+
+                    // Update messages
+                    const chatMessagesContainer = document.getElementById("chatMessages");
+                    chatMessagesContainer.innerHTML = "";
+
+                    chat.messages.forEach(msg => {
+                        const msgDiv = document.createElement("div");
+                        msgDiv.classList.add("chat-message", msg.type);
+
+                        const bubbleDiv = document.createElement("div");
+                        bubbleDiv.classList.add("chat-bubble");
+                        bubbleDiv.innerText = msg.content;
+
+                        const timestampDiv = document.createElement("div");
+                        timestampDiv.classList.add("chat-timestamp");
+                        timestampDiv.innerText = msg.timestamp;
+
+                        msgDiv.appendChild(bubbleDiv);
+                        msgDiv.appendChild(timestampDiv);
+
+                        chatMessagesContainer.appendChild(msgDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching chat data:', error);
+                    chatMessages.innerHTML = '<div class="alert alert-danger">Error loading chat data. Please try again.</div>';
+                });
         }
 
         function closeChatModal() {
@@ -387,5 +640,37 @@
                 modalInstance.hide();
             }
         }
+
+        // Utility function to force cleanup modal issues
+        function forceCleanupModal() {
+            // Hide any modal instances
+            const modalElement = document.getElementById('chatModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+            // Remove stuck backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                if (backdrop.parentNode) {
+                    backdrop.parentNode.removeChild(backdrop);
+                }
+            });
+
+            // Clean up body classes and styles
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            console.log('Modal cleanup forced');
+        }
+
+        // Add escape key handler for additional cleanup
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setTimeout(forceCleanupModal, 100); // Small delay to let Bootstrap handle it first
+            }
+        });
     </script>
 }
