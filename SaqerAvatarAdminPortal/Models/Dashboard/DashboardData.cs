@@ -1,3 +1,5 @@
+using SaqerAvatarAdminPortal.Models.Chat;
+
 namespace SaqerAvatarAdminPortal.Models.Dashboard;
 
 public class DashboardData
@@ -7,5 +9,5 @@ public class DashboardData
     public DailyChats DailyChats { get; set; } = new();
     public SuccessFailedDaily SuccessFailedDaily { get; set; } = new();
     public RatingsDaily RatingsDaily { get; set; } = new();
-    public List<Chat> RecentChats { get; set; } = new();
+    public List<ChatDto> RecentChats { get; set; } = new(); // Using unified ChatDto instead of Dashboard.Chat
 }

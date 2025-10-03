@@ -1,84 +1,135 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
+using SaqerAvatarAdminPortal.Services.Interfaces;
+using SaqerAvatarAdminPortal.Models.Chat;
+
+namespace SaqerAvatarAdminPortal.Pages;
 
 public class ChatsHistoryModel : PageModel
 {
-    [BindProperty(SupportsGet = true)]
-    public DateTime? SelectedDate { get; set; } = DateTime.UtcNow;
+    private readonly IChatService _chatService;
+    private readonly ILogger<ChatsHistoryModel> _logger;
+    private const int DefaultPageSize = 10;
 
-    public TodayStats TodayStats { get; set; }
-    public List<ChatData> AllChats { get; set; }
-    public List<ChatData> FilteredChats { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    public string SearchQuery { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    public string SelectedCategory { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    public int Page { get; set; } = 1;
-
-    public int TotalPages { get; set; }
-
-    public List<string> Categories { get; set; } = new List<string>
+    public ChatsHistoryModel(IChatService chatService, ILogger<ChatsHistoryModel> logger)
     {
-        "Flight Status", "Flight Booking", "At the Airport", "Vacation Planner",
-        "Baggage", "Miles", "FAQ", "Booking", "Check-in", "Others"
-    };
+        _chatService = chatService;
+        _logger = logger;
+    }
 
-    private const int PageSize = 10;
+    // Filter properties with proper binding
+    [BindProperty(SupportsGet = true)]
+    [DisplayName("Selected Date")]
+    [DataType(DataType.Date)]
+    public DateTime SelectedDate { get; set; } = DateTime.Today;
 
-    public void OnGet(bool setToday = false, bool setYesterday = false)
+    [BindProperty(SupportsGet = true)]
+    [StringLength(100, ErrorMessage = "Search query cannot be longer than 100 characters.")]
+    public string? SearchQuery { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SelectedCategory { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    [Range(1, int.MaxValue, ErrorMessage = "Page must be greater than 0")]
+    public int PageNumber { get; set; } = 1;
+
+    // Read-only properties for display - using unified data from ChatService
+    public ChatStatsDto Stats { get; private set; } = new();
+    public PaginatedList<ChatDto> Chats { get; private set; } = new(new List<ChatDto>(), 0, 1, DefaultPageSize);
+    public IReadOnlyList<string> Categories => _chatService.GetChatCategories();
+
+    public async Task<IActionResult> OnGetAsync()
     {
-        // Sample Data
-        TodayStats = new TodayStats { TotalChats = 127, SuccessChats = 95, FailedChats = 32, AverageRating = 4.3 };
-        AllChats = ChatSampleData.GetSampleChats();
+        try
+        {
+            _logger.LogInformation("Loading chats history page with filters - Date: {SelectedDate}, Search: {SearchQuery}, Category: {SelectedCategory}, Page: {PageNumber}", 
+                SelectedDate, SearchQuery, SelectedCategory, PageNumber);
 
-        if (setToday)
-            SelectedDate = DateTime.Today;
+            // Validate model state
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state, resetting to defaults");
+                ResetToDefaults();
+            }
 
-        if (setYesterday)
-            SelectedDate = DateTime.Today.AddDays(-1);
+            // Get filtered data using the unified ChatService
+            var filteredChats = await _chatService.GetFilteredChatsAsync(SelectedDate, SearchQuery, SelectedCategory);
+            
+            // Calculate stats for the selected date using the same service
+            Stats = await _chatService.GetChatStatsAsync(SelectedDate, SelectedDate);
+            
+            // Apply pagination using the filtered results
+            Chats = PaginatedList<ChatDto>.Create(filteredChats, PageNumber, DefaultPageSize);
 
-        if (SelectedDate.HasValue)
-            FilteredChats = AllChats.Where(c => DateTime.Parse(c.DateTime).Date == SelectedDate.Value.Date).ToList();
-        else
-            FilteredChats = AllChats;
+            _logger.LogInformation("Successfully loaded {TotalChats} chats for date {SelectedDate}, showing page {PageNumber} of {TotalPages}", 
+                Chats.TotalCount, SelectedDate, Chats.PageIndex, Chats.TotalPages);
+
+            return Page();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading chats history page");
+            
+            // Provide empty data and show error state
+            Stats = new ChatStatsDto();
+            Chats = new PaginatedList<ChatDto>(new List<ChatDto>(), 0, 1, DefaultPageSize);
+            
+            ModelState.AddModelError(string.Empty, "Unable to load chat history. Please try again later.");
+            return Page();
+        }
+    }
+
+    public IActionResult OnPostSetDate(string dateType)
+    {
+        _logger.LogInformation("Setting date to: {DateType}", dateType);
+        
+        SelectedDate = dateType.ToLower() switch
+        {
+            "today" => DateTime.Today,
+            "yesterday" => DateTime.Today.AddDays(-1),
+            _ => DateTime.Today
+        };
+
+        // Reset pagination and filters when changing date
+        PageNumber = 1;
+        
+        return RedirectToPage(new { SelectedDate, SearchQuery, SelectedCategory, PageNumber });
+    }
+
+    private void ResetToDefaults()
+    {
+        SelectedDate = DateTime.Today;
+        PageNumber = 1;
+        SearchQuery = null;
+        SelectedCategory = null;
     }
 }
 
-public class TodayStats
+// Pagination helper class
+public class PaginatedList<T> : List<T>
 {
-    public int TotalChats { get; set; }
-    public int SuccessChats { get; set; }
-    public int FailedChats { get; set; }
-    public double AverageRating { get; set; }
-}
+    public int PageIndex { get; }
+    public int TotalPages { get; }
+    public int TotalCount { get; }
 
-public class ChatData
-{
-    public int Id { get; set; }
-    public string DateTime { get; set; }
-    public string Topic { get; set; }
-    public string Summary { get; set; }
-    public int Rating { get; set; }
-    public bool IsFailedChat { get; set; }
-    public string Category { get; set; }
-}
-
-public static class ChatSampleData
-{
-    public static List<ChatData> GetSampleChats()
+    public PaginatedList(List<T> items, int count, int pageIndex, int pageSize)
     {
-        return new List<ChatData>
-        {
-            new ChatData { Id = 101, DateTime = "2024-01-15 14:32", Topic = "Flight Status", Summary = "User inquired about flight AA123", Rating = 5, IsFailedChat = false, Category = "Flight Status" },
-            new ChatData { Id = 102, DateTime = "2024-01-15 13:45", Topic = "Flight Booking", Summary = "User booked flight", Rating = 4, IsFailedChat = false, Category = "Flight Booking" }
-            // Add more sample chats
-        };
+        PageIndex = pageIndex;
+        TotalPages = (int)Math.Ceiling(count / (double)pageSize);
+        TotalCount = count;
+        AddRange(items);
+    }
+
+    public bool HasPreviousPage => PageIndex > 1;
+    public bool HasNextPage => PageIndex < TotalPages;
+
+    public static PaginatedList<T> Create(IQueryable<T> source, int pageIndex, int pageSize)
+    {
+        var count = source.Count();
+        var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+        return new PaginatedList<T>(items, count, pageIndex, pageSize);
     }
 }

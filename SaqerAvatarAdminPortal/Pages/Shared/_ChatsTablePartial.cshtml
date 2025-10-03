@@ -1,0 +1,58 @@
+@model IEnumerable<SaqerAvatarAdminPortal.Models.Chat.ChatDto>
+
+@{
+    var showPagination = ViewData["ShowPagination"]?.ToString() == "true";
+    var tableId = ViewData["TableId"]?.ToString() ?? "chatsTable";
+    var tableTitle = ViewData["TableTitle"]?.ToString() ?? "Chat Conversations";
+}
+
+<div class="table-card">
+    <h3><i class="fas fa-history"></i> @tableTitle</h3>
+    
+    @if (Model.Any())
+    {
+        <div class="table-container">
+            <table class="chats-table" id="@tableId">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Chat Topic</th>
+                        <th>Summary</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var chat in Model)
+                    {
+                        <tr>
+                            <td>@chat.FormattedDateTime</td>
+                            <td><strong>@chat.Topic</strong></td>
+                            <td>@chat.Summary</td>
+                            <td><span class="rating-stars">@chat.RatingStars</span></td>
+                            <td>
+                                <span class="status-badge @chat.StatusClass">
+                                    @chat.StatusText
+                                </span>
+                            </td>
+                            <td>
+                                <button class="view-btn" onclick="openChatModal(@chat.Id)" type="button">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="no-chats-message">
+            <i class="fas fa-calendar-times"></i>
+            <h4>No chats found</h4>
+            <p>No chat conversations found for the selected criteria.</p>
+        </div>
+    }
+</div>

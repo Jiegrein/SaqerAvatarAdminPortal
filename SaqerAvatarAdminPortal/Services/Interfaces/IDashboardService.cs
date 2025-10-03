@@ -1,4 +1,5 @@
 using SaqerAvatarAdminPortal.Models.Dashboard;
+using SaqerAvatarAdminPortal.Models.Chat;
 
 namespace SaqerAvatarAdminPortal.Services.Interfaces;
 
@@ -21,11 +22,11 @@ public interface IDashboardService
     Task<Stats> GetStatsAsync(DateTime? fromDate = null, DateTime? toDate = null);
 
     /// <summary>
-    /// Gets recent chats with optional count limit
+    /// Gets recent chats with optional count limit - now using unified ChatDto
     /// </summary>
     /// <param name="count">Number of recent chats to retrieve (default: 5)</param>
     /// <returns>List of recent chats</returns>
-    Task<List<Chat>> GetRecentChatsAsync(int count = 5);
+    Task<List<ChatDto>> GetRecentChatsAsync(int count = 5);
 
     /// <summary>
     /// Gets chat categories distribution

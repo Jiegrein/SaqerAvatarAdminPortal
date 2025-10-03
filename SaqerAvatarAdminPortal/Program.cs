@@ -16,6 +16,7 @@ builder.Services.Configure<DashboardSettings>(
 
 // Register custom services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 

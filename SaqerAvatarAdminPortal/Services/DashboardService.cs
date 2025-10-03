@@ -1,4 +1,5 @@
 using SaqerAvatarAdminPortal.Models.Dashboard;
+using SaqerAvatarAdminPortal.Models.Chat;
 using SaqerAvatarAdminPortal.Services.Interfaces;
 using SaqerAvatarAdminPortal.Exceptions;
 using Microsoft.Extensions.Options;
@@ -7,11 +8,13 @@ namespace SaqerAvatarAdminPortal.Services;
 
 public class DashboardService : IDashboardService
 {
+    private readonly IChatService _chatService;
     private readonly ILogger<DashboardService> _logger;
     private readonly DashboardSettings _settings;
 
-    public DashboardService(ILogger<DashboardService> logger, IOptions<DashboardSettings> settings)
+    public DashboardService(IChatService chatService, ILogger<DashboardService> logger, IOptions<DashboardSettings> settings)
     {
+        _chatService = chatService;
         _logger = logger;
         _settings = settings.Value;
     }
@@ -73,16 +76,21 @@ public class DashboardService : IDashboardService
         };
     }
 
-    public async Task<List<Chat>> GetRecentChatsAsync(int count = 5)
+    public async Task<List<ChatDto>> GetRecentChatsAsync(int count = 5)
     {
         // Use configured default if count is not specified properly
         if (count <= 0)
             count = _settings.DefaultRecentChatsCount;
             
-        await Task.Delay(10); // Simulate async operation
+        _logger.LogInformation("Getting recent chats, count: {Count}", count);
 
-        var allChats = GetMockChatData();
-        return allChats.Take(count).ToList();
+        // Get recent chats from the shared chat service - no conversion needed now
+        var recentChats = await _chatService.GetRecentTopChatsAsync(
+            DateTime.Today.AddDays(-7), 
+            DateTime.Today, 
+            count);
+
+        return recentChats;
     }
 
     public async Task<Dictionary<string, int>> GetCategoriesAsync()

@@ -1,0 +1,24 @@
+@model SaqerAvatarAdminPortal.Models.Chat.ChatDetailsDto
+
+<div class="chat-info">
+    <div class="chat-meta">
+        <span>@Model.FormattedDateTime</span>
+        <span>@Model.Topic</span>
+        <span>Rating: @Model.RatingStars</span>
+    </div>
+</div>
+
+<div class="chat-messages">
+    @foreach (var message in Model.Messages)
+    {
+        <div class="message @message.Type">
+            <div class="message-avatar">
+                <i class="fas @(message.Type == "user" ? "fa-user" : "fa-robot")"></i>
+            </div>
+            <div class="message-content">
+                @message.Content
+                <div class="message-time">@message.Timestamp</div>
+            </div>
+        </div>
+    }
+</div>

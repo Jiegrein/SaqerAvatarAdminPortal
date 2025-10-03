@@ -10,9 +10,6 @@
     var categoriesJson = JsonSerializer.Serialize(Model.DashboardData.Categories);
 }
 
-
-
-
 <!-- Main Content -->
 <main class="main-content" id="mainContent">
     <div class="container">
@@ -192,129 +189,52 @@
 
         <!-- Recent Chats Table -->
         <section class="table-section">
-            <div class="table-card">
-                <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
-
-                @if (!Model.ViewModel.IsLoading && !Model.ViewModel.HasErrors)
+            @{
+                ViewData["ShowPagination"] = "false";
+                ViewData["TableId"] = "recentChatsTable";
+                ViewData["TableTitle"] = "Recent Top 5 Chats";
+            }
+            
+            @if (!Model.ViewModel.IsLoading && !Model.ViewModel.HasErrors)
+            {
+                @if (Model.DashboardData.RecentChats.Any())
                 {
-                    @if (Model.DashboardData.RecentChats.Any())
-                    {
-                        <div class="table-container">
-                            <table class="chats-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date/Time</th>
-                                        <th>Chat Topic</th>
-                                        <th>Summary</th>
-                                        <th>Rating</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var chat in Model.DashboardData.RecentChats)
-                                    {
-                                        <tr>
-                                            <!-- Date/Time -->
-                                            <td>@chat.DateTime</td>
-
-                                            <!-- Chat Topic (bold) -->
-                                            <td><strong>@chat.Topic</strong></td>
-
-                                            <!-- Summary -->
-                                            <td>@chat.Summary</td>
-
-                                            <!-- Rating as stars -->
-                                            <td>
-                                                @for (int i = 1; i <= 5; i++)
-                                                {
-                                                    if (i <= chat.Rating)
-                                                    {
-                                                        <span class="fa fa-star" style="color: gold;"></span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="fa fa-star" style="color: #ccc;"></span>
-                                                    }
-                                                }
-                                            </td>
-
-                                            <!-- Status badge -->
-                                            <td>
-                                                <span class="status-badge @chat.StatusClass">@chat.Status</span>
-                                            </td>
-
-                                            <!-- Action button -->
-                                            <td>
-                                                <button type="button" class="view-btn btn btn-primary"
-                                                        data-bs-toggle="modal" data-bs-target="#chatModal"
-                                                        onclick="openChatModal('@chat.Id')">
-                                                    <i class="fas fa-eye"></i> View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
+                    <partial name="_ChatsTablePartial" model="Model.DashboardData.RecentChats" />
+                }
+                else
+                {
+                    <div class="table-card">
+                        <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
                         <div class="alert alert-info text-center">
                             <h5><i class="fas fa-info-circle"></i> No Recent Chats</h5>
                             <p>No chat data available for the selected date range.</p>
                         </div>
-                    }
+                    </div>
                 }
-                else if (Model.ViewModel.IsLoading)
-                {
+            }
+            else if (Model.ViewModel.IsLoading)
+            {
+                <div class="table-card">
+                    <h3><i class="fas fa-history"></i> Recent Top 5 Chats</h3>
                     <div class="text-center my-4">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading recent chats...</span>
                         </div>
                         <p class="mt-2">Loading recent chats...</p>
                     </div>
-                }
-            </div>
+                </div>
+            }
         </section>
 
     </div>
 </main>
 
 <!-- Chat History Modal -->
-<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title" id="chatModalLabel">
-                    <i class="fas fa-comments"></i> Chat History
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-                <div class="chat-info mb-3">
-                    <div class="chat-meta">
-                        <span id="chatDate" class="me-3"></span>
-                        <span id="chatTopic" class="me-3"></span>
-                        <span id="chatRating"></span>
-                    </div>
-                </div>
-
-                <div class="chat-messages" id="chatMessages"></div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-
-        </div>
-    </div>
-</div>
+<partial name="_ChatModal" />
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/chat-modal.js" asp-append-version="true"></script>
     <script>
         // Parse Razor-provided JSON
         const dailyChats = @Html.Raw(dailyChatsJson);
@@ -541,135 +461,6 @@
                         }
                     }
                 }
-            }
-        });
-
-        // Get the modal element
-        const chatModalElement = document.getElementById('chatModal');
-
-        // Add event listener for when the modal is completely hidden
-        chatModalElement.addEventListener('hidden.bs.modal', function () {
-            document.body.style.overflow = 'auto'; // Ensure body scrolling is restored
-
-            // Clean up any stuck backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => {
-                if (backdrop.parentNode) {
-                    backdrop.parentNode.removeChild(backdrop);
-                }
-            });
-
-            // Remove modal-open class from body if it's stuck
-            document.body.classList.remove('modal-open');
-
-            // Reset any inline styles that might be stuck
-            document.body.style.paddingRight = '';
-        });
-
-        function openChatModal(chatId) {
-            console.log("Fetching chat data for ID:", chatId);
-
-            // Show loading state
-            const chatMessages = document.getElementById("chatMessages");
-            chatMessages.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-
-            // Get or create modal instance
-            const modalElement = document.getElementById('chatModal');
-            let myModal = bootstrap.Modal.getInstance(modalElement);
-            if (!myModal) {
-                myModal = new bootstrap.Modal(modalElement);
-            }
-
-            // Show modal immediately with loading state
-            myModal.show();
-
-            // Fetch chat data from API
-            fetch(`/api/dashboard/chat/${chatId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(chat => {
-                    console.log("Received chat data:", chat);
-
-                    // Update modal header
-                    document.getElementById("chatDate").innerText = "Date: " + chat.dateTime;
-                    document.getElementById("chatTopic").innerText = "Topic: " + chat.topic;
-
-                    // Update rating
-                    let starsHtml = "";
-                    for (let i = 1; i <= 5; i++) {
-                        starsHtml += `<i class="fa fa-star" style="color:${i <= chat.rating ? "gold" : "#ccc"}"></i>`;
-                    }
-                    document.getElementById("chatRating").innerHTML = starsHtml;
-
-                    // Update messages
-                    const chatMessagesContainer = document.getElementById("chatMessages");
-                    chatMessagesContainer.innerHTML = "";
-
-                    chat.messages.forEach(msg => {
-                        const msgDiv = document.createElement("div");
-                        msgDiv.classList.add("chat-message", msg.type);
-
-                        const bubbleDiv = document.createElement("div");
-                        bubbleDiv.classList.add("chat-bubble");
-                        bubbleDiv.innerText = msg.content;
-
-                        const timestampDiv = document.createElement("div");
-                        timestampDiv.classList.add("chat-timestamp");
-                        timestampDiv.innerText = msg.timestamp;
-
-                        msgDiv.appendChild(bubbleDiv);
-                        msgDiv.appendChild(timestampDiv);
-
-                        chatMessagesContainer.appendChild(msgDiv);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching chat data:', error);
-                    chatMessages.innerHTML = '<div class="alert alert-danger">Error loading chat data. Please try again.</div>';
-                });
-        }
-
-        function closeChatModal() {
-            const modalElement = document.getElementById('chatModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        }
-
-        // Utility function to force cleanup modal issues
-        function forceCleanupModal() {
-            // Hide any modal instances
-            const modalElement = document.getElementById('chatModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-
-            // Remove stuck backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => {
-                if (backdrop.parentNode) {
-                    backdrop.parentNode.removeChild(backdrop);
-                }
-            });
-
-            // Clean up body classes and styles
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
-            console.log('Modal cleanup forced');
-        }
-
-        // Add escape key handler for additional cleanup
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                setTimeout(forceCleanupModal, 100); // Small delay to let Bootstrap handle it first
             }
         });
     </script>

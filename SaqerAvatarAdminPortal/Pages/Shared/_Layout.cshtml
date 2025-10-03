@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chats-history.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SaqerAvatarAdminPortal.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -22,13 +23,13 @@
         <!-- Navigation Menu in Header -->
         <nav class="header-nav">
             <ul class="nav-menu">
-                <li class="nav-item @(ViewContext.RouteData.Values["page"].ToString() == "/Index" ? "active" : "")">
+                <li class="nav-item @(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")">
                     <a asp-page="/Index" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
-                <li class="nav-item @(ViewContext.RouteData.Values["page"].ToString() == "/ChatsHistory" ? "active" : "")">
+                <li class="nav-item @(ViewContext.RouteData.Values["page"]?.ToString() == "/ChatsHistory" ? "active" : "")">
                     <a asp-page="/ChatsHistory" class="nav-link">
                         <i class="fas fa-history"></i>
                         <span>Chats History</span>
